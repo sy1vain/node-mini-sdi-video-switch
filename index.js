@@ -34,6 +34,10 @@ proto.getRouteTo = function(out){
 	return null;
 }
 
+proto.isConnected = function(){
+	return this._connected;
+}
+
 proto._handleData = function(data){
 	if(!this._currentCommand) return this._sendNext();
 
@@ -57,7 +61,9 @@ proto._handleData = function(data){
 
 
 proto._reset = function(){
+	clearTimeout(this._queryTimer);
 	this._connected = false;
+	this._connection = null;
 	this._data = '';
 	this._commands = [];
 	this._currentCommand = null;
@@ -76,10 +82,12 @@ proto._connect = function(){
 proto._onConnect = function(){
 	this._connected = true;
 	this._queryStatus();
+	this._queryTimer = setInterval(this._queryStatus.bind(this), 1000);
 	this.emit('connect');
 }
 
 proto._queryStatus = function(){
+	clearTimeout(this._queryTimer);
 	this._addCommand({cmd: 'MtxCfg7', cb: this._updateStatus.bind(this)});
 }
 
@@ -108,8 +116,9 @@ proto._onError = function(err){
 }
 
 proto._onClose = function(){
-	this._connected = false;
+	this._reset();
 	this.emit('close');
+	setTimeout(this._connect.bind(this), 500);
 }
 
 proto._onTimeout = function(){
@@ -128,6 +137,8 @@ proto._sendNext = function(){
 }
 
 proto._updateStatus = function(err, data){
+	this._queryTimer = setTimeout(this._queryStatus.bind(this), 1000);
+
 	if(!data.hasOwnProperty('levels')) return;
 
 	this._routes = [];
@@ -138,9 +149,6 @@ proto._updateStatus = function(err, data){
 			this._routes.push(route);
 		}
 	}
-
-
-	console.log(this._routes);
 }
 
 
