@@ -23,6 +23,17 @@ proto.route = function(input, output, cb){
 	this._queryStatus();
 }
 
+proto.getRoutes = function(){
+	return this._routes;
+}
+
+proto.getRouteTo = function(out){
+	for(var i=0; i<this._routes.length; i++){
+		if(this._routes[i].to == out) return this._routes[i];
+	}
+	return null;
+}
+
 proto._handleData = function(data){
 	if(!this._currentCommand) return this._sendNext();
 
@@ -50,6 +61,7 @@ proto._reset = function(){
 	this._data = '';
 	this._commands = [];
 	this._currentCommand = null;
+	this._routes = [];
 }
 
 proto._connect = function(){
@@ -118,11 +130,17 @@ proto._sendNext = function(){
 proto._updateStatus = function(err, data){
 	if(!data.hasOwnProperty('levels')) return;
 
-	this._state = [];
+	this._routes = [];
 	for(var i=0; i<data.levels.length; i++){
-		this._state.push(data.levels[i].state);
+		var level = data.levels[i];
+		for(var s=0; s<level.state.length; s++){
+			var route = {to: s+1, from: level.state[s]}
+			this._routes.push(route);
+		}
 	}
-	console.log(this._state);
+
+
+	console.log(this._routes);
 }
 
 
