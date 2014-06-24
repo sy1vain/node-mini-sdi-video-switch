@@ -93,6 +93,12 @@ proto._queryStatus = function(){
 
 proto._sendCommand = function(cmd){
 	if(!cmd) return;
+	if(!this._connection){
+		if(cmd.cb){
+			cmd.cb(new Error('Not connected'));
+		}
+		return this._sendNext();
+	}
 	this._currentCommand = cmd;
 	this._connection.write(cmd.cmd + '\r');
 }
