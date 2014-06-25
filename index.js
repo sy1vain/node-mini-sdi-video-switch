@@ -145,7 +145,11 @@ proto._sendNext = function(){
 proto._updateStatus = function(err, data){
 	this._queryTimer = setTimeout(this._queryStatus.bind(this), 1000);
 
+	if(!data || typeof data != 'object') return;
+
 	if(!data.hasOwnProperty('levels')) return;
+
+	var oldRoutes = this._routes;
 
 	this._routes = [];
 	for(var i=0; i<data.levels.length; i++){
@@ -155,6 +159,11 @@ proto._updateStatus = function(err, data){
 			this._routes.push(route);
 		}
 	}
+
+	if(JSON.stringify(oldRoutes)!=JSON.stringify(this._routes)){
+		this.emit('change', this.getRoutes());
+	}
+
 }
 
 
